@@ -19,10 +19,10 @@ export const getTeacherFailure = (payload) =>({
     payload
 })
 
-export const getTeacher=(page,limit,filter,age,sort)=>(dispatch)=>{
+export const getTeacher=(page,limit,filter,age,sort,query)=>(dispatch)=>{
     console.log("in getTeacher",typeof(page),typeof(limit))
     dispatch(getTeacherRequest())
-    return axios.get(`http://localhost:5000/api/teacher/pagination?page=${page}&limit=${limit}&filter=${filter}&age=${age}&sort=${sort}`)
+    return axios.get(`http://localhost:5000/api/teacher/pagination?page=${page}&limit=${limit}&filter=${filter}&age=${age}&sort=${sort}&query=${query}`)
     // .then(res=>console.log(res))
     .then((res)=>dispatch(getTeacherSuccess(res.data.current)))
     .catch((err)=>dispatch(getTeacherFailure(err)))

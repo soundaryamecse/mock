@@ -9,6 +9,8 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import Pagination from '@material-ui/lab/Pagination'
 import axios from 'axios'
+import {useThrottle} from 'use-throttle'
+import {Link} from 'react-router-dom'
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -112,6 +114,8 @@ function SchoolTeacher(){
     const [avatar,setAvatar] = React.useState("")
 
     const [bgColor,setBgColor] = React.useState("yellow")
+    const [query,setQuery] = React.useState("")
+    const throttledText =useThrottle(query,1000)
     
     
     const [openSnackBar,setOpenSnackBar] = React.useState(false)
@@ -137,28 +141,34 @@ function SchoolTeacher(){
 
     //for getting the totalPage
    useEffect(()=>{
+       
     if(genderForFilter==="" && ageForFilter==="" && sortByAge ==="" )
         { 
             axios.get("http://localhost:5000/api/teacher/getTeacherData?filter=&age=&sort=")
             .then(res=>setTotalPage(res.data.length))        
-            dispatch(getTeacher(page,limit,"","",""))
+            dispatch(getTeacher(page,limit,"","","",""))
         }
+    if(query){
+            axios.get(`http://localhost:5000/api/teacher/getTeacherData?query=${query}`)
+            .then(res=>setTotalPage(res.data.length))        
+            dispatch(getTeacher(page,limit,"","","",query))
+           }
     else if(genderForFilter==="" && ageForFilter  && sortByAge ==="")
     {
         axios.get(`http://localhost:5000/api/teacher/getTeacherData?filter=&age=${Number(ageForFilter)}&sort=`)
         .then(res=>setTotalPage(res.data.length))        
-        dispatch(getTeacher(page,limit,"",Number(ageForFilter),""))
+        dispatch(getTeacher(page,limit,"",Number(ageForFilter),"",""))
     }
     else if(genderForFilter && ageForFilter==="" && sortByAge==="")
     {
         axios.get(`http://localhost:5000/api/teacher/getTeacherData?filter=${genderForFilter}&age=&sort=`)
         .then(res=>setTotalPage(res.data.length))        
-        dispatch(getTeacher(page,limit,genderForFilter,"",""))
+        dispatch(getTeacher(page,limit,genderForFilter,"","",""))
     }
     else if(sortByAge && genderForFilter==="" && ageForFilter===""){
         axios.get(`http://localhost:5000/api/teacher/getTeacherData?filter=&age=&sort=${sortByAge}`)
         .then(res=>setTotalPage(res.data.length))        
-        dispatch(getTeacher(page,limit,"","",sortByAge))
+        dispatch(getTeacher(page,limit,"","",sortByAge,""))
     }
     else if(genderForFilter && ageForFilter && sortByAge==="")
     {
@@ -170,20 +180,20 @@ function SchoolTeacher(){
     {
         axios.get(`http://localhost:5000/api/teacher/getTeacherData?filter=${genderForFilter}&age=&sort=${sortByAge}`)
         .then(res=>setTotalPage(res.data.length))        
-        dispatch(getTeacher(page,limit,genderForFilter,"",sortByAge))
+        dispatch(getTeacher(page,limit,genderForFilter,"",sortByAge,""))
     }
     else if(ageForFilter && sortByAge && genderForFilter==="")
     {
         axios.get(`http://localhost:5000/api/teacher/getTeacherData?filter=&age=${ageForFilter}&sort=${sortByAge}`)
         .then(res=>setTotalPage(res.data.length))        
-        dispatch(getTeacher(page,limit,"",ageForFilter,sortByAge))
+        dispatch(getTeacher(page,limit,"",ageForFilter,sortByAge,""))
     }
       else if(genderForFilter && ageForFilter && sortByAge){
         axios.get(`http://localhost:5000/api/teacher/getTeacherData?filter=${genderForFilter}&age=${Number(ageForFilter)}&sort=${sortByAge}`)
         .then(res=>setTotalPage(res.data.length))
-        dispatch(getTeacher(page,limit,genderForFilter,Number(ageForFilter),sortByAge))
+        dispatch(getTeacher(page,limit,genderForFilter,Number(ageForFilter),sortByAge,""))
         }
-    },[page,genderForFilter,ageForFilter,sortByAge])
+    },[page,genderForFilter,ageForFilter,sortByAge,throttledText])
 
     //handles the data when the page gets change
     const handlePageChange = (event, value) => {
@@ -263,9 +273,11 @@ function SchoolTeacher(){
                     <div><input type="password" value={password} placeholder="Password" onChange={(e)=>setPassword(e.target.value)}/></div>
                     <div><button onClick={handleLogin}>Submit</button></div>
                 </Loginbox>}
+                <div style={{position:"relative",left:"52%",top:"67px"}}><i class="fas fa-search"></i></div>
+                <input type="text" value={query} placeholder="Search by Name" style={{padding:"10px",marginLeft:"40%",marginTop:"3%",marginBottom:"3%",borderRadius:"10px",border:"1px solid lightgrey"}} onChange={(e)=>setQuery(e.target.value)}/>
                 <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center"}}>
                 {data && data.map(item=>(
-                    <TeacherCardWrapper>
+                    <Link to ={`${item._id}`} style={{textDecoration:"none"}}><TeacherCardWrapper>
                      <div onLoad={changeBg} key={item._id}  style={{background:`${bgColor}`,padding:"10px"}}>
                         <div style={{alignSelf:"center",width:"fit-content",borderRadius:"50%",margin:"auto"}} key={item._id}>
                             <img src={item.avatar} alt="avatar" height="100px" width="100px" />
@@ -296,6 +308,7 @@ function SchoolTeacher(){
                         </div>
                     </div>                
                     </TeacherCardWrapper>
+                    </Link>
                 ))}
                 </div>
                 <div style={{display:"flex"}}>
